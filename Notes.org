@@ -1,0 +1,9 @@
+#+TITLE: Notes
+
+* Links
+http://matt.might.net/articles/programming-with-continuations--exceptions-backtracking-search-threads-generators-coroutines/
+https://stackoverflow.com/questions/9050725/call-cc-implementation
+http://matt.might.net/articles/cps-conversion/
+https://en.wikipedia.org/wiki/De_Bruijn_notation
+https://github.com/brendanzab/moniker
+https://docs.rs/moniker/0.5.0/moniker/
