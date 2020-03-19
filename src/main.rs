@@ -2,9 +2,16 @@ use moniker::{Var, Scope, Binder, FreeVar};
 use termcolor::{ColorChoice, StandardStream};
 use std::{io::Result, rc::Rc};
 
-use some_embedded_scripting_language::expr::Expr;
+use some_embedded_scripting_language::{expr::Expr, cont_expr::{KExpr, self}};
 
 pub fn main() -> Result<()> {
+    expr_test()?;
+    cexpr_test()?;
+
+    Ok(())
+}
+
+pub fn cexpr_test() -> Result<()> {
     let f = FreeVar::fresh(Some("f".to_string()));
     let x = FreeVar::fresh(Some("x".to_string()));
 
@@ -14,8 +21,50 @@ pub fn main() -> Result<()> {
         Rc::new(Expr::Lam(Scope::new(
             Binder(x.clone()),
             Rc::new(Expr::App(
-                Rc::new(Expr::Var(Var::Free(f.clone()))),
-                Rc::new(Expr::Var(Var::Free(x.clone()))),
+                Rc::new(Expr::Var(Var::Free(f))),
+                Rc::new(Expr::Var(Var::Free(x))),
+            )),
+        )))
+    )));
+
+
+    let g = FreeVar::fresh(Some("g".to_string()));
+    let x = FreeVar::fresh(Some("x".to_string()));
+    let expr = Expr::Lam(Scope::new(
+        Binder(g.clone()),
+        Rc::new(Expr::Lam(Scope::new(
+            Binder(x),
+            Rc::new(Expr::App(
+                Rc::new(Expr::Var(Var::Free(g))),
+                expr,
+            )),
+        )))
+    ));
+
+    let k = Rc::new(KExpr::Var(Var::Free(FreeVar::fresh_named("exit"))));
+
+    let kexpr = cont_expr::t_k(expr, k);
+
+
+    kexpr.pretty_print(StandardStream::stdout(ColorChoice::Auto))?;
+
+    println!();
+
+    Ok(())
+}
+
+pub fn expr_test() -> Result<()> {
+    let f = FreeVar::fresh(Some("f".to_string()));
+    let x = FreeVar::fresh(Some("x".to_string()));
+
+    // \f => \x => f x
+    let expr = Rc::new(Expr::Lam(Scope::new(
+        Binder(f.clone()),
+        Rc::new(Expr::Lam(Scope::new(
+            Binder(x.clone()),
+            Rc::new(Expr::App(
+                Rc::new(Expr::Var(Var::Free(f))),
+                Rc::new(Expr::Var(Var::Free(x))),
             )),
         )))
     )));
@@ -26,9 +75,9 @@ pub fn main() -> Result<()> {
     let expr = Rc::new(Expr::Lam(Scope::new(
         Binder(g.clone()),
         Rc::new(Expr::Lam(Scope::new(
-            Binder(x.clone()),
+            Binder(x),
             Rc::new(Expr::App(
-                Rc::new(Expr::Var(Var::Free(g.clone()))),
+                Rc::new(Expr::Var(Var::Free(g))),
                 expr,
             )),
         )))
