@@ -1,9 +1,10 @@
-use moniker::BoundTerm;
 use moniker::{Var, Scope, Binder, FreeVar};
-use some_embedded_scripting_language::expr::Expr;
-use std::rc::Rc;
+use termcolor::{ColorChoice, StandardStream};
+use std::{io::Result, rc::Rc};
 
-pub fn main() {
+use some_embedded_scripting_language::expr::Expr;
+
+pub fn main() -> Result<()> {
     let f = FreeVar::fresh(Some("f".to_string()));
     let x = FreeVar::fresh(Some("x".to_string()));
 
@@ -33,6 +34,9 @@ pub fn main() {
         )))
     )));
 
-    println!("{}", expr.pretty_print());
-    println!("{:#?}", expr.free_vars());
+    expr.pretty_print(StandardStream::stdout(ColorChoice::Auto))?;
+
+    println!();
+
+    Ok(())
 }
