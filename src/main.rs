@@ -1,3 +1,4 @@
+use moniker::BoundTerm;
 use moniker::{Var, Scope, Binder, FreeVar};
 use some_embedded_scripting_language::expr::Expr;
 use std::rc::Rc;
@@ -18,5 +19,20 @@ pub fn main() {
         )))
     )));
 
+
+    let g = FreeVar::fresh(Some("g".to_string()));
+    let x = FreeVar::fresh(Some("x".to_string()));
+    let expr = Rc::new(Expr::Lam(Scope::new(
+        Binder(g.clone()),
+        Rc::new(Expr::Lam(Scope::new(
+            Binder(x.clone()),
+            Rc::new(Expr::App(
+                Rc::new(Expr::Var(Var::Free(g.clone()))),
+                expr,
+            )),
+        )))
+    )));
+
     println!("{}", expr.pretty_print());
+    println!("{:#?}", expr.free_vars());
 }
