@@ -1,8 +1,8 @@
-use moniker::{Var, Scope, Binder, FreeVar};
+use moniker::{Var, Scope, Binder, FreeVar, Ignore};
 use termcolor::{ColorChoice, StandardStream};
 use std::{io::Result, rc::Rc};
 
-use some_embedded_scripting_language::{expr::Expr, cont_expr::{KExpr, self}};
+use some_embedded_scripting_language::{expr::Expr, cont_expr::{KExpr, self}, literals::Literal};
 
 pub fn main() -> Result<()> {
     expr_test()?;
@@ -22,7 +22,7 @@ pub fn cexpr_test() -> Result<()> {
             Binder(x.clone()),
             Rc::new(Expr::App(
                 Rc::new(Expr::Var(Var::Free(f))),
-                Rc::new(Expr::Var(Var::Free(x))),
+                Rc::new(Expr::Lit(Ignore(Literal::String("lmao".to_owned())))),
             )),
         )))
     )));

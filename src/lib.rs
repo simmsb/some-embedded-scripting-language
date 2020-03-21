@@ -2,6 +2,7 @@
 
 pub mod expr;
 pub mod cont_expr;
+pub mod literals;
 
 #[cfg(test)]
 mod tests {
