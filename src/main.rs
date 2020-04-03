@@ -44,9 +44,10 @@ pub fn cexpr_test() -> Result<()> {
     let k = Rc::new(KExpr::Var(Var::Free(FreeVar::fresh_named("exit"))));
 
     let kexpr = cont_expr::t_k(expr, k);
+    let fexpr = kexpr.into_fexpr();
 
 
-    kexpr.pretty_print(StandardStream::stdout(ColorChoice::Auto))?;
+    fexpr.pretty_print(StandardStream::stdout(ColorChoice::Auto))?;
 
     println!();
 
@@ -72,7 +73,7 @@ pub fn expr_test() -> Result<()> {
 
     let g = FreeVar::fresh(Some("g".to_string()));
     let x = FreeVar::fresh(Some("x".to_string()));
-    let expr = Rc::new(Expr::Lam(Scope::new(
+    let expr = Expr::Lam(Scope::new(
         Binder(g.clone()),
         Rc::new(Expr::Lam(Scope::new(
             Binder(x),
@@ -81,7 +82,7 @@ pub fn expr_test() -> Result<()> {
                 expr,
             )),
         )))
-    )));
+    ));
 
     expr.pretty_print(StandardStream::stdout(ColorChoice::Auto))?;
 

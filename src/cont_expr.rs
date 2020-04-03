@@ -1,12 +1,12 @@
 use moniker::BoundTerm;
-use moniker::{Binder, FreeVar, Scope, Var, Ignore};
+use moniker::{Binder, FreeVar, Ignore, Scope, Var};
 
 use pretty::{BoxAllocator, DocAllocator, DocBuilder};
 use termcolor::{Color, ColorSpec, WriteColor};
 
 use std::{io::Result, rc::Rc};
 
-use crate::{expr::Expr, literals::Literal};
+use crate::{utils::clone_rc, expr::Expr, flat_expr::FExpr, literals::Literal};
 
 #[derive(Debug, Clone, BoundTerm)]
 pub enum UExpr {
@@ -61,6 +61,31 @@ impl UExpr {
             UExpr::Lit(Ignore(l)) => l.pretty(allocator),
         }
     }
+
+    pub fn into_fexpr(self) -> FExpr {
+        match self {
+            UExpr::Lam(s) => {
+                let Scope {
+                    unsafe_pattern: pat,
+                    unsafe_body:
+                        Scope {
+                            unsafe_pattern: cont,
+                            unsafe_body: body,
+                        },
+                } = s;
+
+                FExpr::LamTwo(Scope {
+                    unsafe_pattern: pat,
+                    unsafe_body: Scope {
+                        unsafe_pattern: cont,
+                        unsafe_body: Rc::new(clone_rc(body).into_fexpr()),
+                    },
+                })
+            }
+            UExpr::Var(s) => FExpr::Var(s),
+            UExpr::Lit(l) => FExpr::Lit(l),
+        }
+    }
 }
 
 #[derive(Debug, Clone, BoundTerm)]
@@ -104,6 +129,24 @@ impl KExpr {
             }
             KExpr::Var(s) => allocator.as_string(s),
             KExpr::Lit(Ignore(l)) => l.pretty(allocator),
+        }
+    }
+
+    pub fn into_fexpr(self) -> FExpr {
+        match self {
+            KExpr::Lam(s) => {
+                let Scope {
+                    unsafe_pattern: pat,
+                    unsafe_body: body,
+                } = s;
+
+                FExpr::LamOne(Scope {
+                    unsafe_pattern: pat,
+                    unsafe_body: Rc::new(clone_rc(body).into_fexpr()),
+                })
+            }
+            KExpr::Var(s) => FExpr::Var(s),
+            KExpr::Lit(l) => FExpr::Lit(l),
         }
     }
 }
@@ -155,6 +198,20 @@ impl CCall {
 
         Ok(())
     }
+
+    pub fn into_fexpr(self) -> FExpr {
+        match self {
+            CCall::UCall(f, v, c) => FExpr::CallTwo(
+                Rc::new(clone_rc(f).into_fexpr()),
+                Rc::new(clone_rc(v).into_fexpr()),
+                Rc::new(clone_rc(c).into_fexpr()),
+            ),
+            CCall::KCall(f, v) => FExpr::CallOne(
+                Rc::new(clone_rc(f).into_fexpr()),
+                Rc::new(clone_rc(v).into_fexpr()),
+            ),
+        }
+    }
 }
 
 pub fn t_k(expr: Expr, k: Rc<KExpr>) -> CCall {
@@ -189,10 +246,6 @@ pub fn t_k(expr: Expr, k: Rc<KExpr>) -> CCall {
             )
         }
     }
-}
-
-fn clone_rc<T: Clone>(r: Rc<T>) -> T {
-    Rc::try_unwrap(r).unwrap_or_else(|t| t.as_ref().clone())
 }
 
 fn t_c(expr: Expr, c: FreeVar<String>) -> CCall {
